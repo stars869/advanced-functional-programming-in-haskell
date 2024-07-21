@@ -87,19 +87,21 @@ cols = transpose
 
 boxs :: Matrix a -> [Row a]
 boxs = map (concat . transpose) . chunk boxsize . concat . map transpose . chunk boxsize
-    where
-        chunk :: Int -> [a] -> [[a]]
-        chunk _ [] = []
-        chunk i xs = let (f, r) = splitAt i xs in f : chunk i r
+
+chunk :: Int -> [a] -> [[a]]
+chunk _ [] = []
+chunk i xs = let (f, r) = splitAt i xs in f : chunk i r
 
 valid :: Grid -> Bool
 valid g = all nodups (rows g) &&
           all nodups (cols g) &&
           all nodups (boxs g)
-    where
-        nodups :: Eq a => [a] -> Bool
-        nodups [] = True
-        nodups (x:xs) = notElem x xs && nodups xs
+
+nodups :: Eq a => [a] -> Bool
+nodups [] = True
+nodups (x:xs) = notElem x xs && nodups xs
+
+
 
 -- A basic solver
 type Choices = [Value]
@@ -109,16 +111,16 @@ solve = filter valid . collapse . choices
 
 choices :: Matrix Value -> Matrix Choices
 choices = map (map choice)
-
-choice :: Value -> Choices
-choice v = if v == '.' then ['1'..'9'] else [v]
+    where
+        choice :: Value -> Choices
+        choice v = if v == '.' then ['1'..'9'] else [v]
 
 collapse :: Matrix [a] -> [Matrix a]
 collapse m = cp (map cp m)
-
-cp :: [[a]] -> [[a]]
-cp [] = [[]]
-cp (xs:xss) = [y:ys | y <- xs, ys <- cp xss]
+    where
+        cp :: [[a]] -> [[a]]
+        cp [] = [[]]
+        cp (xs:xss) = [y:ys | y <- xs, ys <- cp xss]
 
 -- pruning
 prune :: Matrix Choices -> Matrix Choices
@@ -138,13 +140,49 @@ solve2 = filter valid . collapse . prune . choices
 
 -- repeat pruning until we got a fixpoint
 solve3 :: Grid -> [Grid]
-solve3 = filter valid . collapse . fix prune . choices 
+solve3 = filter valid . collapse . fix prune . choices
 
-fix :: Eq a => (a -> a) -> a -> a 
-fix f x = if x == x' then x else fix f x' 
-    where x' = f x 
+fix :: Eq a => (a -> a) -> a -> a
+fix f x = if x == x' then x else fix f x'
+    where x' = f x
+
+-- More optimization
+
+void :: Matrix Choices -> Bool
+void = any (any null)
+
+safe :: Matrix Choices -> Bool 
+safe cm = all consistent (rows cm) &&
+          all consistent (cols cm) &&
+          all consistent (boxs cm) 
+        where 
+            consistent :: Row Choices -> Bool 
+            consistent = nodups . concat . filter single 
+
+single :: Choices -> Bool 
+single [_] = True 
+single _ = False 
+
+blocked :: Matrix Choices -> Bool 
+blocked m = void m || not (safe m)
+
+solve4 :: Grid -> [Grid]
+solve4 = search . prune . choices 
+
+search :: Matrix Choices -> [Grid]
+search m | blocked m = []
+         | all (all single) m = collapse m 
+         | otherwise = [g | m' <- expand m, g <- search (prune m')]
+    where 
+        expand :: Matrix Choices -> [Matrix Choices]
+        expand = map (chunk (boxsize ^ 2)) . expandRow . concat
+
+        expandRow :: Row Choices -> [Row Choices]
+        expandRow [] = [[]]
+        expandRow ([c]:css) = [[c]:r | r <- expandRow css]
+        expandRow (cs:css) = [[c]:css | c <- cs]
 
 -- main
 
 main :: IO ()
-main = print (solve3 easy)
+main = print (solve4 gentle)
