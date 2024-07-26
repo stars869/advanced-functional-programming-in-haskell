@@ -39,8 +39,8 @@ eval (Div x y) = eval x >>= (\n ->
 -- do Notation
 eval' :: Expr -> Maybe Int 
 eval' (Val n) = Just n 
-eval' (Div x y) = do n <- eval x
-                     m <- eval y 
+eval' (Div x y) = do n <- eval' x
+                     m <- eval' y 
                      safediv n m  
 
 -- Example: Lists
