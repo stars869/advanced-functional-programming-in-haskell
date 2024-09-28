@@ -34,10 +34,10 @@ add (Succ n) m = Succ (add n m)
 -- P(Zero) === add Zero Zero = Zero
 --                      Zero = Zero
 
--- Condition: P(m) === add m Zero = m
+-- Induction hypothesis: P(m) === add m Zero = m
 -- P(Succ m) === add (Succ m) Zero = Succ m
 --               Succ (add m Zero) = Succ m
--- apply condition P(m) on the left side:
+-- apply Induction hypothesis P(m) on the left side:
 --                          Succ m = Succ m
 
 
@@ -52,11 +52,11 @@ add (Succ n) m = Succ (add n m)
 -- P(Zero) === add Zero (add y z) = add (add Zero y) z
 --                        add y z = add y z
 
--- Condition: P(m) === add m (add y z) = add (add m y) z
+-- Induction hypothesis: P(m) === add m (add y z) = add (add m y) z
 -- P(Succ m) === add (Succ m) (add y z) = add (add (Succ m) y) z
 --               Succ (add m (add y z)) = add (Succ (add m y)) z
 --                                      = Succ (add (add m y) z)
---  apply condition P(m) on the left side:
+--  apply Induction hypothesis P(m) on the left side:
 --               Succ (add (add m y) z) = Succ (add (add m y) z)
 
 
@@ -83,14 +83,14 @@ rev (x:xs) = rev xs ++ [x]
 -- P([]) === rev (rev []) = []
 --                     [] = []
 
--- Condition: P(ks) === rev (rev ks) = ks
+-- Induction hypothesis: P(ks) === rev (rev ks) = ks
 -- P(k:ks) === rev (rev (k:ks)) = k:ks
 --          rev (rev ks ++ [k]) = k:ks
 -- apply distributivity lemma： rev (xs ++ ys) = rev ys ++ rev xs
 --      rev [k] ++ rev (rev ks) = k:ks
 -- apply singleton list lemma: rev [x] = [x]
 --          [k] ++ rev (rev ks) = k:ks
--- apply condition P(ks):
+-- apply Induction hypothesis P(ks):
 --                    [k] ++ ks = k:ks
 --                         k:ks = k:ks
 
